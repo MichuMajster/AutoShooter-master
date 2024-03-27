@@ -23,4 +23,26 @@ public class BasherController : MonoBehaviour
         //idz do przodu
         transform.position += transform.forward * Time.deltaTime * walkSpeed;
     }
+    private void OnCollisionEnter(Collision collision)
+    {
+        //Debug.Log("Trafiony");
+        //obiekt z którym mamy kolizje
+        GameObject projectile = collision.gameObject;
+
+        //tylko jeśli trafił nas gracz
+        if(projectile.CompareTag("PlayerProjectile"))
+        {
+            //zniknij pocisk
+
+            Destroy(projectile);
+
+            //zniknij przeciwnika
+            Destroy(transform.gameObject);
+        }
+       /* if (collision.gameObject.CompareTag("Player"))
+        {
+            //weszlismy w gracza - poinformuj go o tym
+            collision.gameObject.GetComponent<PlayerController>().Hit(gameObject);
+        }*/
+    }
 }

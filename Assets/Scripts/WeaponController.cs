@@ -1,20 +1,38 @@
-Ôªøusing System.Collections;
+using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class WeaponController : MonoBehaviour
 {
-    //zasiÁíï broni
+    //zasiÍg broni
     public float range = 10f;
 
     //transform gracza
     Transform player;
+
+    //prefab pocisku
+    public GameObject projectilePrefab;
+
+    //spawn pocisku
+    Transform projectileSpawn;
+
+    //czestotliwosc strzalu (/sek)
+    public float rateOfFire = 1;
+    //czas od ostatniego wystrzalu
+    float timeSinceLastFire = 0;
+
+    //moc wystrza≥u (prÍdkoúc poczπtkowa)
+    public float projectileForce = 20;
 
     // Start is called before the first frame update
     void Start()
     {
         // pozycja gracza
         player = GameObject.FindWithTag("Player").transform;
+
+        //znajdz w hierarchii obieku miejsce z ktorego staruje pocisk
+        projectileSpawn = transform.Find("ProjectileSpawn").transform;
     }
 
     // Update is called once per frame
@@ -23,27 +41,53 @@ public class WeaponController : MonoBehaviour
         Transform target = TagTargeter("Enemy");
         if (target != transform)
         {
-            Debug.Log("Celuje do: " + target.gameObject.name);
+            //Debug.Log("Celuje do: " + target.gameObject.name);
             transform.LookAt(target.position + Vector3.up);
+
+            //wystrzel pocisk
+            //jeúli minÍ≥o wiÍcej od ostatniego strza≥u niø wskazuje na to prÍdkoúÊ strzelania
+            if (timeSinceLastFire > rateOfFire)
+            {
+                //stworz pocisk
+                GameObject projectile = Instantiate(projectilePrefab, projectileSpawn.position, Quaternion.identity);
+
+                
+                //znajdz rrigidbody dla pocisku
+                Rigidbody projectileRB = projectile.GetComponent<Rigidbody>();
+                //"popchnij" pocisk do przodu
+                //sila dziala w kierunku przodu dzia≥a (pojectilespawn.z) * si≥a wystrza≥u
+                projectileRB.AddForce(projectileSpawn.transform.forward * projectileForce, ForceMode.VelocityChange);
+
+                //jeøeli strzelisz to wyzeruj czas 
+                timeSinceLastFire = 0;
+
+                //zniszcz pocisk po 5 sekundach
+                Destroy(projectile, 5);
+            }
+            else
+            {
+                timeSinceLastFire += Time.deltaTime;
+            }
         }
+
     }
     Transform TagTargeter(string tag)
     {
-        //tablica wszystkich obiektÈóö pasujÈâçych do taga podanego jako agument
+        //tablica wszystkich obiektÛw pasujπcych do taga podanego jako agument
         GameObject[] targets = GameObject.FindGameObjectsWithTag(tag);
 
-        //szukamy najbliÁ™∫zego
+        //szukamy najbliøszego
         Transform closestTarget = transform;
         float closestDistance = Mathf.Infinity;
 
         foreach (GameObject target in targets)
         {
-            //wektor przesuniÁíöia wzglÁí†em gracza
+            //wektor przesuniÍcia wzglÍdem gracza
             Vector3 difference = target.transform.position - player.position;
-            //odlegÈÄôÓ∞´ od gracza
+            //odleg≥oúÊ od gracza
             float distance = difference.magnitude;
 
-            if (distance < closestDistance && distance < range)
+            if (distance < closestDistance && distance < range) 
             {
                 closestTarget = target.transform;
                 closestDistance = distance;
@@ -57,19 +101,19 @@ public class WeaponController : MonoBehaviour
         //znajdz wszystkie colidery w promieniu = range i zapisz je do tablicy collidersInRange
         Collider[] collidersInRange = Physics.OverlapSphere(transform.position, range);
 
-        //do celÈóö testowych 
-        //Debug.Log("IloÓ∞´ colliderÈóö w zasiÁíïu broni: " +  collidersInRange.Length);
+        //do celÛw testowych 
+        //Debug.Log("IloúÊ colliderÛw w zasiÍgu broni: " +  collidersInRange.Length);
 
-        //szukamy najbliÁ™∫zego przeciwnika
+        //szukamy najbliøszego przeciwnika
 
         Transform target = transform;
         float targetDistance = Mathf.Infinity;
 
         foreach (Collider collider in collidersInRange)
         {
-            //wyciÈâönij transforma od tego coldiera
+            //wyciπgnij transforma od tego coldiera
 
-            //najpierw znajdz kapsuË≤´/model (wË±âÓØäiciela colidera)
+            //najpierw znajdz kapsu≥e/model (w≥aúciciela colidera)
             GameObject model = collider.gameObject;
 
             if (model.transform.parent != null)
@@ -77,16 +121,16 @@ public class WeaponController : MonoBehaviour
                 //znajdz rodzica modelu czyli przeciwnika
                 GameObject enemy = model.transform.parent.gameObject;
 
-                //sprawdz czy to co znalazË≤´ÔøΩ jest przeciwnikiem
+                //sprawdz czy to co znalaz≥eú jest przeciwnikiem
                 if (enemy.CompareTag("Enemy"))
                 {
-                    //jeÓØìi to przeciwnik to okreÓØì wektor przesuniÁíöia
+                    //jeúli to przeciwnik to okreúl wektor przesuniÍcia
                     Vector3 diference = player.position - enemy.transform.position;
-                    //policz dÈÄùgoÓ∞´ wektora (odlegÈÄôÓ∞´)
+                    //policz d≥ugoúÊ wektora (odleg≥oúÊ)
                     float distance = diference.magnitude;
                     if (distance < targetDistance)
                     {
-                        //znaleziono nowy cel bliÁû†j
+                        //znaleziono nowy cel bliøej
                         target = enemy.transform;
                         targetDistance = distance;
                     }
@@ -96,8 +140,8 @@ public class WeaponController : MonoBehaviour
 
         }
 
-        //do celÈóö testowych
-        Debug.Log("Celuje do: " + target.gameObject.name);
+        //do celÛw testowych
+        //Debug.Log("Celuje do: " + target.gameObject.name);
 
         return target;
     }

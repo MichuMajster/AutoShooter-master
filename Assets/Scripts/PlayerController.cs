@@ -36,4 +36,17 @@ public class PlayerController : MonoBehaviour
         transform.position += movement;
         
     }
+    public void Hit(GameObject other)
+    {
+        //zarejestrowano kolizje z other
+        Debug.Log("Gracz trafiony");
+    }
+    private void OnCollisionEnter(Collision collision)
+    {
+        //Debug.Log(collision.ToString());
+        if(collision.gameObject.CompareTag("Enemy"))
+        {
+            Debug.Log("Gracz trafiony");
+        }
+    }
 }
