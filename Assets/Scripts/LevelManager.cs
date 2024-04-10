@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+
 
 public class LevelManager : MonoBehaviour
 {
@@ -19,6 +21,21 @@ public class LevelManager : MonoBehaviour
     //bezpieczna odleg³oœæ spawnu
     float spawnDistance = 30;
 
+    //ilosc punktów
+    int points = 0;
+
+    //licznik punktów na ekranie
+    public GameObject pointsCounter;
+
+    //licznik czasu na ekranie
+    public GameObject timeCounter;
+
+    //ekran koñca gry
+    public GameObject gameOverScreen;
+
+    //czas do koñca poziomu
+    public float levelTime = 60f;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -36,7 +53,7 @@ public class LevelManager : MonoBehaviour
         timeSinceSpawn += Time.deltaTime;
 
         //je¿eli d³u¿ej ni¿ jedna sekunda
-        if (timeSinceSpawn > spawnInterval)
+        if(timeSinceSpawn > spawnInterval)
         {
             //wygeneruj losow¹ pozycje
             //Vector3 randomPosition = new Vector3(Random.Range(-10, 10), 0, Random.Range(-10, 10));
@@ -54,7 +71,7 @@ public class LevelManager : MonoBehaviour
             randomPosition += player.position;
 
             //sprawdz czy danej miejsce jest wolne
-            if (!Physics.CheckSphere(new Vector3(randomPosition.x, 1, randomPosition.z), 0.5f))
+            if(!Physics.CheckSphere(new Vector3(randomPosition.x, 1, randomPosition.z), 0.5f))
             {
                 //stworz nowego przeciwnika z istniej¹cego prefaba, na pozycji randomPosition z rotacj¹ domyœln¹
                 Instantiate(basherPrefab, randomPosition, Quaternion.identity);
@@ -63,11 +80,53 @@ public class LevelManager : MonoBehaviour
                 timeSinceSpawn = 0;
             }
             //jeœli miejsce bêdzie zajête to program podejmie kolejn¹ próbê w nastêpnej klatce
-
+            
         }
 
         //TODO: opracowaæ sposób na przyspieszanie spawnu w nieskoñczonoœæ wraz z d³ugoœcia trwania etapu
 
+        //dodaj do czasu poziomu czas od ostatniej klatki
+        
+        if(levelTime < 0)
+        {
+            GameOver();
+        } 
+        else
+        {
+            levelTime -= Time.deltaTime;
+            UpdateUI();
+        }
+        
+    }
+    public void AddPoints(int amount)
+    {
+        points += amount;
+    }
+    //funkcja która odpowiada za aktualizacje interfejsu
+    private void UpdateUI()
+    {
+        pointsCounter.GetComponent<TextMeshProUGUI>().text = "Punkty: " + points.ToString();
+        timeCounter.GetComponent<TextMeshProUGUI>().text = Mathf.Floor(levelTime).ToString();
+    }
+    //ta funkcja uruchamia siê jeœli gracz zginie lub jeœli czas siê skoñczy
+    public void GameOver()
+    {
+        //wy³¹cz sterowanie gracza
+        player.GetComponent<PlayerController>().enabled = false;
+        player.transform.Find("MainTurret").GetComponent<WeaponController>().enabled = false;
 
+        //wylacz bashery
+        GameObject[] enemyList = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (GameObject basher in enemyList)
+        {
+            basher.GetComponent<BasherController>().enabled = false;
+        }
+
+        //wyswietl poprawnie wynik na ekranie koñcowym
+        gameOverScreen.transform.Find("FinalScoreText").GetComponent<TextMeshProUGUI>().text = "Wynik koñcowy: " + points.ToString();
+
+        //poka¿ ekran koñca gry
+        gameOverScreen.SetActive(true);
+        
     }
 }
